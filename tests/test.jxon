@@ -1,0 +1,14 @@
+{
+  "name": "Conor Stuart Roe",
+  "age": 23.2,
+  "schools": [
+    {
+      "name": "NCSSM",
+      "type": "Secondary"
+    },
+    {
+      "name": "Haverford College",
+      "type": "Postsecondary"
+    }
+  ]
+}
