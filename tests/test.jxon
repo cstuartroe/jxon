@@ -1,6 +1,6 @@
 {
   "name": "Conor Stuart Roe",
-  "age": 23.2,
+  "age": 23,
   "schools": [
     {
       "name": "NCSSM",
@@ -10,5 +10,10 @@
       "name": "Haverford College",
       "type": "Postsecondary"
     }
-  ]
+  ],
+  "intro": <div class="col-6 col-md-12">
+    <h1>Conor Stuart Roe</h1>
+    <br></br>
+    <p>Hi! my name is <b>Conor</b> and I like to boogie.</p>
+  </div>
 }
