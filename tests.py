@@ -1,7 +1,8 @@
 import json
 import unittest
 
-from src import jxon, jxsd
+from src import jxsd
+from src import combined as jxon
 from src.jxontype import JXONType
 
 TEST_JXON = [
@@ -45,4 +46,8 @@ class JSONBackwardsCompatibilityTests(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    unittest.main()
+    with open("tests/test.jxon", "r") as fh:
+        o = jxon.load(fh)
+
+    print(jxon.dumps(o))
+    # unittest.main()

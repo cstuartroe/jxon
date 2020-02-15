@@ -1,6 +1,6 @@
 from xml.etree import ElementTree as ET
 
-from .parser import Parser, jxon_string_escape
+from .parser import Parser, DIGITS, LETTERS, jxon_string_escape
 from .jxontype import JXONType
 from . import jxon
 
@@ -10,16 +10,22 @@ class JXSDParseException(BaseException):
 
 
 class JXSDParser(Parser):
+    exception_class = JXSDParseException
+    permit_type_annotation = False
+    native_extension = ".jxsd"
+
     SIMPLE_TYPE_KEYWORDS = {
-        "Integer": int,
-        "Float": float,
-        "String": str,
-        "Boolean": bool,
-        "XML": ET.Element
+        "Integer": JXONType(int),
+        "Float": JXONType(float),
+        "String": JXONType(str),
+        "Boolean": JXONType(bool),
+        "XML": JXONType(ET.Element)
     }
 
     def __init__(self, s):
-        super().__init__(s, exception_class=JXSDParseException)
+        super().__init__(s)
+        for label, jxon_type in JXSDParser.SIMPLE_TYPE_KEYWORDS.items():
+            self.module.set(label, jxon_type)
 
     def grab_value(self):
         if self.next() == "{":
@@ -30,10 +36,8 @@ class JXSDParser(Parser):
         elif self.next(4) == "Enum":
             return self.grab_enum()
 
-        for label, jxon_type in JXSDParser.SIMPLE_TYPE_KEYWORDS.items():
-            if self.next(len(label)) == label:
-                self.advance(len(label))
-                return JXONType(jxon_type)
+        elif self.next() in LETTERS | {'_'}:
+            return self.resolve_variable()
 
         self.throw_exception("Unknown expression type")
 
@@ -81,7 +85,7 @@ class JXSDEncodeException(BaseException):
 
 def dumps_helper(jxon_type: JXONType, indent, sort_keys, indent_level):
     for key, value in JXSDParser.SIMPLE_TYPE_KEYWORDS.items():
-        if jxon_type.jxon_type is value:
+        if jxon_type.jxon_type is value.jxon_type:
             return key
 
     if jxon_type.jxon_type is list:

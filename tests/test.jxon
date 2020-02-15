@@ -1,4 +1,6 @@
-{
+import test_schema from "tests/test.jxsd";
+
+me: test_schema = {
   "name": "Conor Stuart Roe",
   "age": 23,
   "schools": [
@@ -18,3 +20,5 @@
     <p>What happens if there are<b>no spaces</b>around a child element?</p>
   </div>
 }
+
+export default me;

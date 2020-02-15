@@ -1,9 +1,6 @@
 from xml.etree import ElementTree as ET
 
-from .parser import Parser, jxon_string_escape
-
-DIGITS = set("0123456789")
-LETTERS = set("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+from .parser import Parser, DIGITS, LETTERS, jxon_string_escape
 
 
 XML_ENTITIES = {
@@ -20,8 +17,9 @@ class JXONParseException(BaseException):
 
 
 class JXONParser(Parser):
-    def __init__(self, s):
-        super().__init__(s, exception_class=JXONParseException)
+    exception_class = JXONParseException
+    permit_type_annotation = True
+    native_extension = ".jxon"
 
     def grab_value(self):
         if self.next() == "{":
@@ -44,6 +42,9 @@ class JXONParser(Parser):
         elif self.next(4) == "null":
             self.advance(4)
             return None
+
+        elif self.next() in LETTERS | {'_'}:
+            return self.resolve_variable()
 
         else:
             self.throw_exception("Unknown expression type")
@@ -92,7 +93,7 @@ class JXONParser(Parser):
             return '0'
 
         s = ''
-        while self.next() in DIGITS:
+        while self.next(permit_eol=True) in DIGITS:
             s += self.next()
             self.advance()
         return s
@@ -252,15 +253,6 @@ def jxon_equal(o1, o2):
         return all(jxon_equal(*pair) for pair in zip(o1, o2))
     else:
         raise JXONEncodeException("Not parseable as a JXON type: " + repr(t))
-
-
-def loads(s):
-    parser = JXONParser(s)
-    return parser.parse()
-
-
-def load(fp):
-    return loads(fp.read())
 
 
 def xml_text_escape(s):
