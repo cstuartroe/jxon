@@ -1,18 +1,9 @@
 from xml.etree import ElementTree as ET
 
+from .parser import Parser, jxon_string_escape
+
 DIGITS = set("0123456789")
 LETTERS = set("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
-
-SINGLE_CHAR_ESCAPES = {
-    '"': '"',
-    '\\': '\\',
-    '/': '/',
-    'b': '\b',
-    'f': '\f',
-    'n': '\n',
-    'r': '\r',
-    't': '\t'
-}
 
 
 XML_ENTITIES = {
@@ -28,168 +19,9 @@ class JXONParseException(BaseException):
     pass
 
 
-class JXONEncodeException(BaseException):
-    pass
-
-
-class JXONSchemaValidityException(BaseException):
-    pass
-
-
-class JXONType:
-    SIMPLE_TYPES = {int, float, bool, str, ET.Element}
-
-    def __init__(self, type, subtype=None):
-        if type in JXONType.SIMPLE_TYPES:
-            if subtype is not None:
-                raise ValueError("Subtype should not be supplied for simple type")
-
-        elif type is list:
-            if subtype is not None and type(subtype) is not JXONType:
-                raise ValueError("Array subtype must be a JXON type")
-
-        elif type is dict:
-            if type(subtype) is not dict:
-                raise ValueError("Object subtype must be a dictionary")
-            for key, value in subtype.items():
-                if value is not None and type(value) is not JXONType:
-                    raise ValueError("Invalid object member type: " + repr(type(value)))
-
-        elif type is set:
-            if type(subtype) is not set:
-                raise ValueError("Expected set subtype")
-            member_types = [type(e) for e in subtype]
-            if member_types[0] not in (int, float, str):
-                raise ValueError("Invalid set member type: " + repr(member_types[0]))
-            elif any(t is not member_types[0] for t in member_types):
-                raise ValueError("Inconsistent set member types")
-
-        else:
-            raise ValueError("Invalid type: " + repr(type))
-
-        self.type = type
-        self.subtype = subtype
-
-    def is_jxon_instance(self, obj, fill_null=False):
-        if obj is None:
-            return True
-
-        if self.type in JXONType.SIMPLE_TYPES:
-            return type(obj) is self.type
-
-        elif self.type is list:
-            if type(obj) is not list:
-                return False
-
-            if self.subtype is None:
-                if not fill_null:
-                    return True
-
-                self.subtype = JXONType.parse_type(obj[0])
-
-            return all(self.subtype.is_jxon_instance(e) for e in obj)
-
-        elif self.type is dict:
-            if type(obj) is not dict:
-                return False
-
-            if set(self.subtype.keys()) != set(obj.keys()):
-                return False
-
-            for key, jxon_type in self.subtype.items():
-                if jxon_type is None:
-                    if fill_null:
-                        self.subtype[key] = JXONType.parse_type(obj[key])
-
-                elif not jxon_type.is_jxon_instance(obj[key]):
-                    return False
-
-            return True
-
-        elif self.type is set:
-            return obj in self.subtype
-
-        else:
-            raise RuntimeError("??")
-
-    @staticmethod
-    def parse_type(obj):
-        if obj is None:
-            return None
-
-        elif type(obj) in JXONType.SIMPLE_TYPES:
-            return JXONType(type(obj))
-
-        elif type(obj) is list:
-            if len(obj) == 0:
-                return JXONType(list, None)
-
-            jxon_type = JXONType.parse_type(obj[0])
-            if not all(jxon_type.is_jxon_instance(e) for e in obj):
-                raise JXONSchemaValidityException("Inconsistent list element type")
-
-            return JXONType(list, jxon_type)
-
-        elif type(obj) is dict:
-            d = {}
-            for key, value in obj.items():
-                jxon_type = JXONType.parse_type(value)
-                d[key] = jxon_type
-
-            return JXONType(dict, d)
-
-        else:
-            raise JXONSchemaValidityException("Not parseable as JXON type: " + repr(type(obj)))
-
-
-
-class JXONParser:
+class JXONParser(Parser):
     def __init__(self, s):
-        self.lines = s.split("\n")
-        self.line_no = 0
-        self.col_no = 0
-
-    def next(self, n=1):
-        if self.eof():
-            raise JXONParseException("EOF while parsing JXON")
-        elif self.eol():
-            self.throw_exception("Unexpected EOL")
-
-        return self.lines[self.line_no][self.col_no: self.col_no+n]
-
-    def advance(self, n=1):
-        self.col_no += n
-
-    def eol(self):
-        return self.col_no >= len(self.lines[self.line_no])
-
-    def eof(self):
-        return self.line_no >= len(self.lines)
-
-    def throw_exception(self, message):
-        message = ("(line %s, col %s) " % (self.line_no+1, self.col_no+1)) +\
-                  message + "\n" + self.lines[self.line_no] + "\n" + " "*self.col_no + "^"
-        raise JXONParseException(message)
-
-    def expect(self, c):
-        if self.next() == c:
-            self.advance()
-        else:
-            self.throw_exception("Expected " + repr(c))
-
-    def pass_whitespace(self):
-        if self.eof():
-            return
-        elif self.eol():
-            self.col_no = 0
-            self.line_no += 1
-            self.pass_whitespace()
-        elif self.next() in {' ', '\t', '\r'}:
-            self.advance()
-            self.pass_whitespace()
-
-    def parse(self):
-        return self.grab_element()
+        super().__init__(s, exception_class=JXONParseException)
 
     def grab_value(self):
         if self.next() == "{":
@@ -216,42 +48,6 @@ class JXONParser:
         else:
             self.throw_exception("Unknown expression type")
 
-    def grab_object(self):
-        self.expect("{")
-
-        self.pass_whitespace()
-        if self.next() == "}":
-            return {}
-
-        d = self.grab_members({})
-
-        self.expect('}')
-
-        return d
-
-    def grab_member(self):
-        self.pass_whitespace()
-        key = self.grab_string()
-        self.pass_whitespace()
-        self.expect(':')
-        value = self.grab_element()
-
-        return key, value
-
-    def grab_members(self, members):
-        key, value = self.grab_member()
-
-        if key in members:
-            self.throw_exception("Repeat key: " + repr(key))
-        else:
-            members[key] = value
-
-        if self.next() == ',':
-            self.advance()
-            return self.grab_members(members)
-        else:
-            return members
-
     def grab_array(self):
         self.expect("[")
 
@@ -264,57 +60,6 @@ class JXONParser:
         self.expect(']')
 
         return d
-
-    def grab_elements(self):
-        e = self.grab_element()
-
-        if self.next() == ',':
-            self.advance()
-            elements = self.grab_elements()
-        else:
-            elements = []
-
-        return [e] + elements
-
-    def grab_element(self):
-        self.pass_whitespace()
-        e = self.grab_value()
-        self.pass_whitespace()
-        return e
-
-    def grab_string(self):
-        self.expect('"')
-        s = self.grab_characters()
-        self.expect('"')
-        return s
-
-    def grab_characters(self):
-        s = ""
-        while self.next() != '"':
-            s += self.grab_character()
-        return s
-
-    def grab_character(self):
-        if self.next() == '\\':
-            self.advance()
-            return self.grab_escape()
-        elif self.next() == '"':
-            self.throw_exception("Expected a character")
-        else:
-            c = self.next()
-            self.advance()
-            return c
-
-    def grab_escape(self):
-        if self.next() in SINGLE_CHAR_ESCAPES:
-            c = SINGLE_CHAR_ESCAPES[self.next()]
-            self.advance()
-            return c
-        elif self.next() == 'u':
-            pass
-            # TODO: hex escapes
-        else:
-            self.throw_exception("Invalid escape sequence.")
 
     def grab_number(self):
         s = ""
@@ -352,8 +97,7 @@ class JXONParser:
                     self.pass_comment()
                 e.append(self.grab_xml(allow_tail=True))
 
-            self.expect('<')
-            self.expect('/')
+            self.expect('</')
             close_name = self.grab_xml_name()
             if close_name != name:
                 self.throw_exception("Mismatched XML tag, expecting a " + name)
@@ -435,10 +179,7 @@ class JXONParser:
         return value
 
     def pass_comment(self):
-        self.expect('<')
-        self.expect('!')
-        self.expect('-')
-        self.expect('-')
+        self.expect('<!--')
         self.pass_whitespace()
         while self.next(3) != "-->":
             self.advance()
@@ -446,12 +187,8 @@ class JXONParser:
         self.pass_whitespace()
 
 
-def has_consistent_schema(obj):
-    try:
-        JXONType.parse_type(obj)
-        return True
-    except JXONSchemaValidityException:
-        return False
+class JXONEncodeException(BaseException):
+    pass
 
 
 def jxon_equal(o1, o2):
@@ -486,10 +223,6 @@ def loads(s):
 
 def load(fp):
     return loads(fp.read())
-
-
-def jxon_string_escape(s):
-    return s  # TODO
 
 
 def xml_text_escape(s):
