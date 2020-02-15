@@ -13,7 +13,8 @@
   ],
   "intro": <div class="col-6 col-md-12">
     <h1>Conor Stuart Roe</h1>
-    <br></br>
+    <br/>
     <p>Hi! my name is <b>Conor</b> and I like to boogie.</p>
+    <p>What happens if there are<b>no spaces</b>around a child element?</p>
   </div>
 }

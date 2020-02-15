@@ -30,7 +30,7 @@ class JXONParser(Parser):
             return self.grab_array()
         elif self.next() == '"':
             return self.grab_string()
-        elif self.next() in DIGITS:
+        elif self.next() in DIGITS | {'-'}:
             return self.grab_number()
         elif self.next() == '<':
             return self.grab_xml(allow_tail=False)
@@ -63,12 +63,39 @@ class JXONParser(Parser):
 
     def grab_number(self):
         s = ""
+        if self.next() == '-':
+            s += '-'
+            self.advance()
+
+        s += self.grab_digits()
+
+        if self.next() == '.':
+            s += '.'
+            self.advance()
+            s += self.grab_digits(zerostart=True)
+
+        if self.next() in 'Ee':
+            s += 'e'
+            self.advance()
+            if self.next() in '+-':
+                s += self.next()
+                self.advance()
+            else:
+                self.throw_exception("Exponent must be followed by sign")
+            s += self.grab_digits(zerostart=True)
+
+        return eval(s)
+
+    def grab_digits(self, zerostart=False):
+        if (not zerostart) and self.next() == '0':
+            self.advance()
+            return '0'
+
+        s = ''
         while self.next() in DIGITS:
             s += self.next()
             self.advance()
-
-        # TODO: actual number parsing
-        return int(s)
+        return s
 
     def grab_xml(self, allow_tail):
         self.expect("<")
@@ -90,12 +117,20 @@ class JXONParser(Parser):
 
         else:
             self.expect('>')
+            self.pass_whitespace()
             e.text = self.grab_xml_text()
+
+            children = []
             while self.next(2) != "</":
                 # TODO: pull into own function?
                 if self.next(2) == "<!":
                     self.pass_comment()
-                e.append(self.grab_xml(allow_tail=True))
+                children.append(self.grab_xml(allow_tail=True))
+            if len(children) > 0:
+                children[-1].tail = children[-1].tail.rstrip()
+                e.extend(children)
+            else:
+                e.text = e.text.rstrip()
 
             self.expect('</')
             close_name = self.grab_xml_name()
@@ -204,12 +239,15 @@ def jxon_equal(o1, o2):
         return set(o1.keys()) == set(o2.keys()) and all(jxon_equal(o1[key], o2[key]) for key in o1)
     elif t is ET.Element:
         if o1.tag != o2.tag:
+            print(o1.tag, o2.tag)
             return False
         if dict(o1.items()) != dict(o2.items()):
             return False
         if o1.text != o2.text:
+            print("text", o1.tag, repr(o1.text), repr(o2.text))
             return False
         if o1.tail != o2.tail:
+            print("tail", o1.tag, repr(o1.tail), repr(o2.tail))
             return False
         return all(jxon_equal(*pair) for pair in zip(o1, o2))
     else:
@@ -247,7 +285,7 @@ def dumps_helper(o, indent, sort_keys, indent_level):
         for key, value in o.items():
             s += ' ' + key + '="' + jxon_string_escape(value) + '"'
 
-        if o.text is None and len(list(o)) == 0:
+        if not o.text and len(list(o)) == 0:
             s += '/>'
         else:
             s += '>'
@@ -259,8 +297,13 @@ def dumps_helper(o, indent, sort_keys, indent_level):
                 s += xml_text_escape(o.text)
 
             if list(o):
-                for e in o:
-                    if indent is not None:
+                if indent is not None and (o.text == "" or o.text[-1] in {' ', '\t', '\r', '\n'}):
+                    s = s.rstrip()
+                    s += '\n'
+                    s += ' ' * (indent * (indent_level+1))
+
+                for i, e in enumerate(o):
+                    if indent is not None and i != 0:
                         s += '\n'
                         s += ' ' * (indent * (indent_level+1))
 
@@ -273,11 +316,15 @@ def dumps_helper(o, indent, sort_keys, indent_level):
             s += "</" + o.tag + '>'
 
         if o.tail:
-            if indent is not None:
+            if indent is not None and o.tail[0] in {' ', '\t', '\r', '\n'}:
                 s += '\n'
                 s += ' ' * (indent * indent_level)
+                s += xml_text_escape(o.tail.lstrip())
+            else:
+                s += xml_text_escape(o.tail)
 
-            s += xml_text_escape(o.tail)
+            if indent is not None:
+                s = s.rstrip()
 
         return s
 

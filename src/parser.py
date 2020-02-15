@@ -151,4 +151,7 @@ class Parser:
 
 
 def jxon_string_escape(s):
-    return s  # TODO
+    for escape, char in SINGLE_CHAR_ESCAPES.items():
+        if char != '/':
+            s = s.replace(char, '\\' + escape)
+    return s  # TODO: more?

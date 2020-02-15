@@ -13,7 +13,7 @@ TEST_XML = [
 ]
 
 TEST_JSON = [
-    # "random.json"
+    "random.json"
 ]
 
 TEST_JXSD = [
@@ -41,20 +41,8 @@ class JSONBackwardsCompatibilityTests(unittest.TestCase):
             o = jxon.loads(raw)
 
             self.assertTrue(jxon.jxon_equal(o, jxon.loads(jxon.dumps(o))))
+            self.assertTrue(jxon.jxon_equal(o, jxon.loads(jxon.dumps(o, indent=2))))
 
 
 if __name__ == "__main__":
-    for test_file in ALL_TESTS:
-        fullpath = 'tests/' + test_file
-        with open(fullpath, 'r') as fh:
-            obj = jxon.load(fh)
-
-        print(jxon.dumps(obj, indent=2))
-        print(jxsd.dumps(JXONType.parse_type(obj), indent=2))
-
-    for test_file in TEST_JXSD:
-        fullpath = 'tests/' + test_file
-        with open(fullpath, 'r') as fh:
-            print(jxsd.dumps(jxsd.load(fh), indent=2))
-
     unittest.main()
