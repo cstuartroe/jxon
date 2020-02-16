@@ -1,6 +1,4 @@
-from xml.etree import ElementTree as ET
-
-from .parser import Parser, DIGITS, LETTERS, jxon_string_escape
+from .parser import SIMPLE_TYPE_KEYWORDS, Parser, LETTERS, jxon_string_escape, loads_factory, load_factory
 from .jxontype import JXONType
 from . import jxon
 
@@ -13,19 +11,6 @@ class JXSDParser(Parser):
     exception_class = JXSDParseException
     permit_type_annotation = False
     native_extension = ".jxsd"
-
-    SIMPLE_TYPE_KEYWORDS = {
-        "Integer": JXONType(int),
-        "Float": JXONType(float),
-        "String": JXONType(str),
-        "Boolean": JXONType(bool),
-        "XML": JXONType(ET.Element)
-    }
-
-    def __init__(self, s):
-        super().__init__(s)
-        for label, jxon_type in JXSDParser.SIMPLE_TYPE_KEYWORDS.items():
-            self.module.set(label, jxon_type)
 
     def grab_value(self):
         if self.next() == "{":
@@ -70,13 +55,8 @@ class JXSDParser(Parser):
         return JXONType(set, set(els))
 
 
-def loads(s):
-    parser = JXSDParser(s)
-    return parser.parse()
-
-
-def load(fp):
-    return loads(fp.read())
+loads = loads_factory(JXSDParser)
+load = load_factory(JXSDParser)
 
 
 class JXSDEncodeException(BaseException):
@@ -84,7 +64,7 @@ class JXSDEncodeException(BaseException):
 
 
 def dumps_helper(jxon_type: JXONType, indent, sort_keys, indent_level):
-    for key, value in JXSDParser.SIMPLE_TYPE_KEYWORDS.items():
+    for key, value in SIMPLE_TYPE_KEYWORDS.items():
         if jxon_type.jxon_type is value.jxon_type:
             return key
 

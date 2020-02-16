@@ -19,7 +19,6 @@ class JXONParseException(BaseException):
 class JXONParser(Parser):
     exception_class = JXONParseException
     permit_type_annotation = True
-    native_extension = ".jxon"
 
     def grab_value(self):
         if self.next() == "{":

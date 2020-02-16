@@ -1,0 +1,5 @@
+conor: String = "Conor Stuart Roe"
+orville: String = "Orville Redenbacher"
+lincoln: String = "Abraham Lincoln"
+
+num3 = 3e+10

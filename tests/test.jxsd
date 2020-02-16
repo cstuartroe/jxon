@@ -1,9 +1,11 @@
+School = {
+  "name": String,
+  "type": Enum("Primary", "Secondary", "Postsecondary")
+}
+
 {
   "name": String,
   "age": Integer,
-  "schools": [{
-    "name": String,
-    "type": Enum("Primary", "Secondary", "Postsecondary")
-  }],
+  "schools": [School],
   "intro": XML
 }

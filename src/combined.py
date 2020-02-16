@@ -1,8 +1,11 @@
+from .parser import load_factory, loads_factory
 from .jxon import JXONParser, dumps, dump, jxon_equal
 from .jxsd import JXSDParser
 
 
 class CombinedParser(JXONParser):
+    native_extension = ".jxon"
+
     subparser_classes = {
         ".jxsd": JXSDParser,
         ".xml": JXONParser,
@@ -10,10 +13,5 @@ class CombinedParser(JXONParser):
     }
 
 
-def loads(s):
-    parser = CombinedParser(s)
-    return parser.parse()
-
-
-def load(fp):
-    return loads(fp.read())
+loads = loads_factory(CombinedParser)
+load = load_factory(CombinedParser)

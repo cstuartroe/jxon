@@ -38,8 +38,7 @@ class JSONBackwardsCompatibilityTests(unittest.TestCase):
         for test_file in ALL_TESTS:
             fullpath = 'tests/' + test_file
             with open(fullpath, 'r') as fh:
-                raw = fh.read()
-            o = jxon.loads(raw)
+                o = jxon.load(fh)
 
             self.assertTrue(jxon.jxon_equal(o, jxon.loads(jxon.dumps(o))))
             self.assertTrue(jxon.jxon_equal(o, jxon.loads(jxon.dumps(o, indent=2))))
@@ -49,5 +48,5 @@ if __name__ == "__main__":
     with open("tests/test.jxon", "r") as fh:
         o = jxon.load(fh)
 
-    print(jxon.dumps(o))
-    # unittest.main()
+    print(jxon.dumps(o, indent=2))
+    unittest.main()

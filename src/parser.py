@@ -1,4 +1,7 @@
 import os
+from xml.etree import ElementTree as ET
+
+from .jxontype import JXONType
 
 DIGITS = set("0123456789")
 LETTERS = set("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
@@ -19,10 +22,21 @@ class VariableResolutionException(BaseException):
     pass
 
 
+SIMPLE_TYPE_KEYWORDS = {
+    "Integer": JXONType(int),
+    "Float": JXONType(float),
+    "String": JXONType(str),
+    "Boolean": JXONType(bool),
+    "XML": JXONType(ET.Element)
+}
+
+
 class Module:
-    def __init__(self, default_export=None, exports={}):
-        self.default_export = default_export
-        self.exports = exports
+    def __init__(self):
+        self.default_export = None
+        self.exports = {}
+        for label, jxon_type in SIMPLE_TYPE_KEYWORDS.items():
+            self.set(label, jxon_type)
 
     def set(self, key, value):
         if key in self.exports:
@@ -33,6 +47,7 @@ class Module:
         if labels[0] in self.exports:
             value = self.exports[labels[0]]
         else:
+            print(self.exports)
             raise VariableResolutionException("Name not found: " + labels[0])
 
         if len(labels) == 1:
@@ -50,10 +65,11 @@ class Parser:
     native_extension = None
     subparser_classes = {}
 
-    def __init__(self, s):
+    def __init__(self, s, curr_dir=None):
         self.lines = s.split("\n")
         self.line_no = 0
         self.col_no = 0
+        self.curr_dir = curr_dir
         self.module = Module()
 
     def next(self, n=1, permit_eol=True):
@@ -196,11 +212,15 @@ class Parser:
 
     def load_submodule(self, filepath):
         _, extension = os.path.splitext(filepath)
+
+        if filepath.startswith('./'):
+            filepath = os.path.join(self.curr_dir, filepath[2:])
+
         with open(filepath, 'r') as fh:
             s = fh.read()
 
         subparser_class = self.resolve_subparser_class(extension)
-        subparser = subparser_class(s)
+        subparser = subparser_class(s, os.path.dirname(filepath))
         submodule = subparser.parse_as_module()
         return submodule
 
@@ -223,6 +243,7 @@ class Parser:
             self.pass_whitespace()
 
             if self.next() == ':':
+                bp = self.breakpoint()
                 if not self.permit_type_annotation:
                     self.throw_exception("Cannot provide type annotations in JXSD")
 
@@ -236,20 +257,30 @@ class Parser:
             self.expect('=')
             value = self.grab_element()
             if jxon_type is not None and not jxon_type.is_jxon_instance(value):
-                self.throw_exception("Type does not match annotation")
+                self.throw_exception("Type does not match annotation", bp)
 
             self.module.set(label, value)
 
     def resolve_variable(self):
-        labels = [self.grab_label()]
+        label = self.grab_label()
+        if label == "import":
+            return self.grab_inline_import()
+
+        labels = [label]
         while self.next(permit_eol=True) == '.':
             self.advance()
             labels.append(self.grab_label())
 
         return self.module.resolve_variable_chain(labels)
 
+    def grab_inline_import(self):
+        self.expect('(')
+        filepath = self.grab_string()
+        self.expect(')')
+        return self.load_submodule(filepath).default_export
+
     def read_exports(self):
-        exports = None
+        exports = {}
         default_export = None
 
         while self.next(6) == "export":
@@ -398,3 +429,22 @@ def jxon_string_escape(s):
         if char != '/':
             s = s.replace(char, '\\' + escape)
     return s  # TODO: more?
+
+
+def loads_factory(parser_class):
+    def loads(s):
+        parser = parser_class(s)
+        return parser.parse()
+
+    return loads
+
+
+def load_factory(parser_class):
+    def loads(fp):
+        s = fp.read()
+        curr_dir = os.path.dirname(fp.name)
+        parser = parser_class(s, curr_dir=curr_dir)
+        return parser.parse()
+
+    return loads
+
