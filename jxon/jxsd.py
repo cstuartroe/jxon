@@ -1,5 +1,5 @@
 from .parser import SIMPLE_TYPE_KEYWORDS, Parser, LETTERS, jxon_string_escape, loads_factory, load_factory
-from .jxontype import JXONType
+from .jxontype import JXONType, parse_type, has_consistent_schema
 from . import jxon
 
 

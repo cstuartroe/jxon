@@ -10,7 +10,7 @@ me: test_schema = {
     import("./ncssm.json"),
     {
       "name": "Haverford
-      College",
+      \t\tCollege",
       "type": "Postsecondary"
     }
   ],

@@ -1,9 +1,9 @@
 import json
 import unittest
 
-from src import jxsd
-from src import combined as jxon
-from src.jxontype import JXONType
+from jxon import jxsd
+from jxon import combined as jxon
+from jxon.jxontype import JXONType
 
 TEST_JXON = [
     "test.jxon"

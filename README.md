@@ -309,3 +309,143 @@ foo = {
 
 export default foo;
 ```
+
+# Using this library
+
+`jxon` is available on PyPI, so to install it simply run:
+
+``` 
+pip install jxon
+```
+
+The API for this library is intended to be as analogous to the standard `json` library
+as possible, though it includes a few more addons like the `jxsd` module.
+
+### Reading a JXON file or string
+
+```
+import jxon
+
+s = """
+{
+  "name": "Conor Stuart Roe",
+  "some_xml": <p>Hello, World!</p>
+}
+"""
+
+obj = jxon.loads(s)
+
+with open("example.jxon", "r") as fh:
+    obj2 = jxon.load(fh)
+```
+
+Like the `json` library, this package makes a function `loads` available for 
+parsing a string as JXON, and a function `load` for parsing JXON from a file-like
+object.
+
+If you use imports beginning with `"./"` in your JXON, make sure to use `load`!
+Otherwise, the parser has no way to determine the original directory of your file.
+
+### Exporting a JXON object to a file or string
+
+```
+from xml.etree import ElementTree as ET
+import jxon
+
+obj = {
+    "name": "Conor Stuart Roe",
+    "some_xml": ET.Element("p")
+}
+
+s = jxon.dumps(obj)
+
+with open("example.jxon", "w") as fh:
+    jxon.dump(obj, fh, indent=2, sort_keys=True)
+```
+
+Also like the `json` library, this package has a function `dumps` for exporting
+a JXON object as a string, and `dump` for exporting into a file-like object.
+
+Both `dump` and `dumps` permit two arguments, `indent` and `sort_keys`. If you don't
+specify `indent`, then no newline characters will be put into your string/file. `indent`
+can be set to an integer, which will then be how many spaces it inserts per level of
+indentation. If `sort_keys` is not set, keys in JXON objects will be exported in their 
+original order. If it is set to `True`, all keys in all objects will be in alphabetical
+order.
+
+### Checking the equality of JXON objects
+
+If you want to check whether two JXON objects are equal, use `jxon_equal`
+
+``` 
+from jxon import jxon_equal
+
+jxon_equal(5, 5)
+
+jxon_equal({"name": "Alice"}, 5)
+```
+
+## Using JXSD
+
+`jxon.jxsd` has functions `load`, `loads`, `dump`, and `dumps` which all
+behave similarly to the `jxon` functions, but they deal with JXONType objects.
+
+``` 
+from jxon import jxsd
+
+with open("example.jxsd", "r") as fh:
+    example_schema = jxsd.load(fh)
+
+type(example_schema)  # JXONType
+```
+
+### Checking the equality of JXON objects
+
+JXON object validity is already checked when loading or dumping - syntax errors when
+loading, objects not castable to JXON when dumping, and inconsistent array element
+types when doing either, will all raise Python exceptions. However, if you want
+to check whether some object has a valid JXON schema without loading or dumping,
+you can use the function `jxsd.has_consistent_schema`
+
+``` 
+from jxon import jxsd
+
+jxsd.has_consistent_schema([
+    {
+        "name": "Alice"
+    },
+    {
+        "name": "Bob"
+    }
+])
+```
+
+### Parsing the type of a JXON object
+
+Say you have a large JSON or JXON file and you just want to know its schema.
+Look no further than `parse_type`:
+
+``` 
+import jxon
+from jxon import jxsd
+
+with open("bigdata.json", "r") as fh:
+    obj = jxon.load(fh)
+
+big_schema = jxsd.parse_type(obj)
+
+with open("bigdata.jxsd", "w") as fh:
+    jxsd.dump(big_schema, fh, indent=2)
+```
+
+Now you can take a peek at `bigdata.jxsd` to see what your JSON's schema is!
+
+### Checking whether a JXON object is an instance of a JXONType
+
+```
+with open("bigdata2.json", "r") as fh:
+    obj2 = jxon.load(fh)
+
+big_schema.is_jxon_instance(obj2)
+```
+

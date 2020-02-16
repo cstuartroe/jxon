@@ -54,7 +54,7 @@ class JXONType:
                 if not fill_null:
                     return True
 
-                self.subtype = JXONType.parse_type(obj[0])
+                self.subtype = parse_type(obj[0])
 
             return all(self.subtype.is_jxon_instance(e) for e in obj)
 
@@ -68,7 +68,7 @@ class JXONType:
             for key, jxon_type in self.subtype.items():
                 if jxon_type is None:
                     if fill_null:
-                        self.subtype[key] = JXONType.parse_type(obj[key])
+                        self.subtype[key] = parse_type(obj[key])
 
                 elif not jxon_type.is_jxon_instance(obj[key]):
                     return False
@@ -81,39 +81,39 @@ class JXONType:
         else:
             raise RuntimeError("??")
 
-    @staticmethod
-    def parse_type(obj):
-        if obj is None:
-            return None
 
-        elif type(obj) in JXONType.SIMPLE_TYPES:
-            return JXONType(type(obj))
+def parse_type(obj):
+    if obj is None:
+        return None
 
-        elif type(obj) is list:
-            if len(obj) == 0:
-                return JXONType(list, None)
+    elif type(obj) in JXONType.SIMPLE_TYPES:
+        return JXONType(type(obj))
 
-            jxon_type = JXONType.parse_type(obj[0])
-            if not all(jxon_type.is_jxon_instance(e) for e in obj):
-                raise JXONSchemaValidityException("Inconsistent list element type")
+    elif type(obj) is list:
+        if len(obj) == 0:
+            return JXONType(list, None)
 
-            return JXONType(list, jxon_type)
+        jxon_type = parse_type(obj[0])
+        if not all(jxon_type.is_jxon_instance(e) for e in obj):
+            raise JXONSchemaValidityException("Inconsistent list element type")
 
-        elif type(obj) is dict:
-            d = {}
-            for key, value in obj.items():
-                jxon_type = JXONType.parse_type(value)
-                d[key] = jxon_type
+        return JXONType(list, jxon_type)
 
-            return JXONType(dict, d)
+    elif type(obj) is dict:
+        d = {}
+        for key, value in obj.items():
+            jxon_type = parse_type(value)
+            d[key] = jxon_type
 
-        else:
-            raise JXONSchemaValidityException("Not parseable as JXON type: " + repr(type(obj)))
+        return JXONType(dict, d)
+
+    else:
+        raise JXONSchemaValidityException("Not parseable as JXON type: " + repr(type(obj)))
 
 
 def has_consistent_schema(obj):
     try:
-        JXONType.parse_type(obj)
+        parse_type(obj)
         return True
     except JXONSchemaValidityException:
         return False
