@@ -87,7 +87,16 @@ class Parser:
         return self.lines[self.line_no][self.col_no: self.col_no+n]
 
     def advance(self, n=1):
-        self.col_no += n
+        if self.eof():
+            return
+        if self.eol():
+            self.col_no = 0
+            self.line_no += 1
+        else:
+            self.col_no += 1
+
+        if n > 1:
+            self.advance(n-1)
 
     def eol(self):
         return self.col_no >= len(self.lines[self.line_no])
@@ -126,15 +135,28 @@ class Parser:
         self.pass_whitespace()
 
     def pass_whitespace(self):
-        if self.eof():
-            return
-        elif self.eol():
-            self.col_no = 0
-            self.line_no += 1
+        if self.next(2) == "//":
+            self.pass_line_comment()
             self.pass_whitespace()
-        elif self.next() in {' ', '\t', '\r'}:
+        elif self.next(2) == "/*":
+            self.pass_multiline_comment()
+            self.pass_whitespace()
+        elif self.eof():
+            return
+        elif self.eol() or self.next() in {' ', '\t', '\r'}:
             self.advance()
             self.pass_whitespace()
+
+    def pass_line_comment(self):
+        self.expect("//")
+        while not self.eol():
+            self.advance()
+
+    def pass_multiline_comment(self):
+        self.expect("/*")
+        while self.next(2) != "*/":
+            self.advance()
+        self.advance(2)
 
     def parse(self):
         module = self.parse_as_module()
@@ -307,8 +329,10 @@ class Parser:
             self.expect(';')
             self.pass_whitespace()
 
-        self.module.default_export = default_export
-        self.module.exports = exports
+        if default_export is not None:
+            self.module.default_export = default_export
+        if exports != {}:
+            self.module.exports = exports
 
     def grab_element(self):
         self.pass_whitespace()
@@ -366,22 +390,30 @@ class Parser:
         else:
             return members
 
-    def grab_string(self):
+    def grab_string(self, allow_lb=False):
         self.expect('"')
-        s = self.grab_characters()
+        s = self.grab_characters(allow_lb)
         self.expect('"')
         return s
 
-    def grab_characters(self):
+    def grab_characters(self, allow_lb):
         s = ""
         while self.next() != '"':
-            s += self.grab_character()
+            if self.eol():
+                if not allow_lb:
+                    self.throw_exception("Line break not allowed here")
+                self.pass_whitespace()
+                if s[-1] not in " \t\r":
+                    s += ' '
+            else:
+                s += self.grab_character()
         return s
 
     def grab_character(self):
         if self.next() == '\\':
             self.advance()
-            return self.grab_escape()
+            e = self.grab_escape()
+            return e
         elif self.next() == '"':
             self.throw_exception("Expected a character")
         else:

@@ -4,15 +4,21 @@ import * as names from "./names.jxon";
 NCSSM: School = import("./ncssm.json")
 
 me: test_schema = {
-  "name": names.conor,
+  "name": names.conor, // this is a comment
   "age": 23,
   "schools": [
     import("./ncssm.json"),
     {
-      "name": "Haverford College",
+      "name": "Haverford
+      College",
       "type": "Postsecondary"
     }
   ],
+
+  /* this is
+     a big ol
+     multiline comment
+  */
   "intro": <div class="col-6 col-md-12">
     <h1>Conor Stuart Roe</h1>
     <br/>

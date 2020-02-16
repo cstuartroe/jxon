@@ -26,7 +26,7 @@ class JXONParser(Parser):
         elif self.next() == "[":
             return self.grab_array()
         elif self.next() == '"':
-            return self.grab_string()
+            return self.grab_string(allow_lb=True)
         elif self.next() in DIGITS | {'-'}:
             return self.grab_number()
         elif self.next() == '<':
