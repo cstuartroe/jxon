@@ -108,6 +108,7 @@ class JXONParser(Parser):
             if key in attributes:
                 self.throw_exception("Repeated attribute name")
             attributes[key] = value
+            self.pass_whitespace()
 
         e = ET.Element(name, attrib=attributes)
 

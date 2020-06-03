@@ -6,7 +6,7 @@ from jxon import combined as jxon
 from jxon.jxontype import JXONType
 
 TEST_JXON = [
-    "test.jxon"
+    # "test.jxon",
 ]
 
 TEST_XML = [
@@ -14,14 +14,15 @@ TEST_XML = [
 ]
 
 TEST_JSON = [
-    "random.json"
+    # "random.json",
+    "data.json"
 ]
 
 TEST_JXSD = [
-    "test.jxsd"
+    # "test.jxsd"
 ]
 
-ALL_TESTS = TEST_JXON + TEST_XML + TEST_JSON
+ALL_TESTS = TEST_JXON + TEST_JSON
 
 
 class JSONBackwardsCompatibilityTests(unittest.TestCase):
@@ -45,8 +46,9 @@ class JSONBackwardsCompatibilityTests(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    with open("tests/test.jxon", "r") as fh:
-        o = jxon.load(fh)
+    # unittest.main()
+    with open("tests/data.json", "r") as fh:
+        data = jxon.load(fh)
 
-    print(jxon.dumps(o, indent=2))
-    unittest.main()
+    schema = jxsd.parse_type(data)
+    print(jxsd.dumps(schema, 2))

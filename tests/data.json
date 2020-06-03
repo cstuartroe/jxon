@@ -1,0 +1,163 @@
+{
+  "user_id": "lwbdotqbz",
+
+  "personal_info": {
+    "name": "Kristian Gaylord",
+    "img_path": "ADMIN@FILESTORAGE:/img/headshot/lwbdotqbz",
+    "current_title": "Full Stack Developer",
+    "industry": "Financial Technology",
+    "phone_number": 8284902383,
+    "current_city": "New York",
+    "current_state": "NY",
+    "current_country": "USA",
+    "email": "k.gaylord@columbia.edu",
+    "ext_github": "www.github.com/kristian1108",
+    "ext_linkedin": "www.linkedin.com/in/kaylord",
+    "ext_twitter": null,
+    "ext_instagram": null,
+    "ext_facebook": null,
+    "ext_behance": null,
+    "ext_dribble": null
+  },
+
+  "education": {
+    "columbiany": {
+      "gpa": 3.6,
+      "degree": "B.S.",
+      "subject_1": "Statistics",
+      "subject_2": "Computer Science",
+      "date_start": "08/2018",
+      "date_finish": "05/2020",
+      "info_1": "Triplebyte Certified Machine Learning Engineer",
+      "info_2": "American Institute of Astronautics and Aeronautics",
+      "is_story": false
+    },
+    "scipomento": {
+      "gpa": 3.6,
+      "degree": "B.A.",
+      "subject_1": "Arabic",
+      "subject_2": "Middle East Studies",
+      "date_start": "08/2016",
+      "date_finish": "05/2018",
+      "info_1": null,
+      "info_2": null,
+      "is_story": false
+    }
+  },
+
+  "9to5": {
+    "vgirc": {
+      "title": "Software Engineer",
+      "date_start": "05/2020",
+      "date_finished": null,
+      "current": true,
+      "bullet_1": "Lorem ipsum",
+      "bullet_2": "Lorem ipsum",
+      "bullet_3": "Lorem ipsum",
+      "bullet_4": "Lorem ipsum",
+      "high_1": {
+        "type": "numeric",
+        "data": 100,
+        "description": "Things Done."
+      },
+      "high_2" : {
+        "type": "numeric",
+        "data": 100,
+        "description": "Things Done."
+      },
+      "high_3" : {
+        "type": "numeric",
+        "data": 100,
+        "description": "Things Done."
+      },
+      "high_4" : {
+        "type": "numeric",
+        "data": 100,
+        "description": "Things Done."
+      },
+      "used_skill": {
+        "JavaScript": 6,
+        "Python": 8,
+        "React": 7,
+        "UX/UI Design": 5,
+        "Linux": 4
+      }
+    }
+  },
+
+  "language": {
+    "Arabic": "elementary",
+    "French": "fluent",
+    "English": "native"
+  },
+
+  "award": {
+  },
+
+  "certification": {
+    "faaprivpil": {
+      "date_issue": "08/2016",
+      "date_expire": null
+    },
+    "ssiopenwat": {
+      "date_issue": "02/2016",
+      "date_expire": null
+    }
+  },
+
+  "volunteer":{
+
+  },
+
+  "story": {
+
+  },
+
+  "career_highlights": {
+    "slot_1": {
+      "type": "numeric",
+      "data": 100,
+      "description": "Things Done."
+    },
+    "slot_2": {
+      "type": "numeric",
+      "data": 150,
+      "description": "Things Done."
+    },
+    "slot_3": {
+      "type": "numeric",
+      "data": 400,
+      "description": "Things Done."
+    }
+  },
+
+  "lede": {
+    "line_1": "I am a person who is trying to create Lede.",
+    "line_2": "This is the second sentence that is going to appear below."
+  },
+
+  "skill": {
+    "Frontend Development": 6,
+    "Backend Development": 8,
+    "Statistics": 9,
+    "Machine Learning": 9,
+    "Communication": 8
+  },
+
+  "peer_eval": {
+    "eval_1": {
+      "leadership": 7,
+      "punctuality": 4,
+      "teamwork": 6,
+      "reliability": 8,
+      "communication": 6
+    },
+    "eval_2": {
+      "leadership": 7,
+      "punctuality": 4,
+      "teamwork": 6,
+      "reliability": 8,
+      "communication": 6
+    }
+  }
+}

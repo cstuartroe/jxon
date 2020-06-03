@@ -67,6 +67,8 @@ class Parser:
 
     def __init__(self, s, curr_dir=None):
         self.lines = s.split("\n")
+        print(self.lines)
+        print()
         self.line_no = 0
         self.col_no = 0
         self.curr_dir = curr_dir

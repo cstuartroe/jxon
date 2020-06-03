@@ -346,6 +346,8 @@ object.
 If you use imports beginning with `"./"` in your JXON, make sure to use `load`!
 Otherwise, the parser has no way to determine the original directory of your file.
 
+default export
+
 ### Exporting a JXON object to a file or string
 
 ```
@@ -372,6 +374,8 @@ can be set to an integer, which will then be how many spaces it inserts per leve
 indentation. If `sort_keys` is not set, keys in JXON objects will be exported in their 
 original order. If it is set to `True`, all keys in all objects will be in alphabetical
 order.
+
+no imports/whatev
 
 ### Checking the equality of JXON objects
 

@@ -64,6 +64,9 @@ class JXSDEncodeException(BaseException):
 
 
 def dumps_helper(jxon_type: JXONType, indent, sort_keys, indent_level):
+    if jxon_type is None:
+        return "None"
+
     for key, value in SIMPLE_TYPE_KEYWORDS.items():
         if jxon_type.jxon_type is value.jxon_type:
             return key
