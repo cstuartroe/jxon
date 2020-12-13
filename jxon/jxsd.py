@@ -79,9 +79,11 @@ def dumps_helper(jxon_type: JXONType, indent, sort_keys, indent_level):
         if indent is not None:
             s += '\n'
 
-        items = jxon_type.subtype.items()
+        items = list(jxon_type.subtype.items())
+        if len(items) == 0:
+            return '{}'
         if sort_keys:
-            items = sorted(list(items), key=lambda x: x[0])
+            items = sorted(items, key=lambda x: x[0])
         for key, value in items:
             if indent is not None:
                 s += ' ' * (indent * (indent_level+1))

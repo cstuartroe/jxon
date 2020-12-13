@@ -53,6 +53,7 @@ class JXONParser(Parser):
 
         self.pass_whitespace()
         if self.next() == "]":
+            self.advance()
             return []
 
         d = self.grab_elements()
@@ -232,7 +233,7 @@ def jxon_equal(o1, o2):
         return False
     t = type(o1)
 
-    if t in {int, float, str, bool}:
+    if t in {int, float, str, bool, type(None)}:
         return o1 == o2
     elif t is list:
         return all(jxon_equal(*pair) for pair in zip(o1, o2))
@@ -240,15 +241,12 @@ def jxon_equal(o1, o2):
         return set(o1.keys()) == set(o2.keys()) and all(jxon_equal(o1[key], o2[key]) for key in o1)
     elif t is ET.Element:
         if o1.tag != o2.tag:
-            print(o1.tag, o2.tag)
             return False
         if dict(o1.items()) != dict(o2.items()):
             return False
         if o1.text != o2.text:
-            print("text", o1.tag, repr(o1.text), repr(o2.text))
             return False
         if o1.tail != o2.tail:
-            print("tail", o1.tag, repr(o1.tail), repr(o2.tail))
             return False
         return all(jxon_equal(*pair) for pair in zip(o1, o2))
     else:
@@ -321,6 +319,9 @@ def dumps_helper(o, indent, sort_keys, indent_level):
         return s
 
     elif type(o) is dict:
+        if o == {}:
+            return '{}'
+
         s = '{'
         if indent is not None:
             s += '\n'
@@ -351,6 +352,9 @@ def dumps_helper(o, indent, sort_keys, indent_level):
         return s
 
     elif type(o) is list:
+        if o == []:
+            return '[]'
+
         s = '['
         if indent is not None:
             s += '\n'

@@ -47,7 +47,6 @@ class Module:
         if labels[0] in self.exports:
             value = self.exports[labels[0]]
         else:
-            print(self.exports)
             raise VariableResolutionException("Name not found: " + labels[0])
 
         if len(labels) == 1:
@@ -67,8 +66,6 @@ class Parser:
 
     def __init__(self, s, curr_dir=None):
         self.lines = s.split("\n")
-        print(self.lines)
-        print()
         self.line_no = 0
         self.col_no = 0
         self.curr_dir = curr_dir
@@ -361,6 +358,7 @@ class Parser:
 
         self.pass_whitespace()
         if self.next() == "}":
+            self.advance()
             return {}
 
         d = self.grab_members({})
